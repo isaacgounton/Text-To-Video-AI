@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  text-to-video-ai:
+    build: .
+    container_name: text-to-video-ai
+    env_file:
+      - .env
+    volumes:
+      # Mount output directory to persist generated videos
+      - ./output:/app/output
+      # Mount logs directory to persist logs
+      - ./logs:/app/.logs
+      # Mount temp directory for MoviePy
+      - /tmp/moviepy:/tmp/moviepy
+    environment:
+      - MOVIEPY_TEMP_DIR=/tmp/moviepy
+      - IMAGEMAGICK_BINARY=/usr/bin/convert
+    working_dir: /app
+    # Override default command to allow custom topics
+    # Usage: docker-compose run text-to-video-ai python app.py "Your topic here"
+    command: ["python", "app.py", "AI and technology facts"]
+    
+  # Optional: Add a web interface service for future development
+  # web-interface:
+  #   build: .
+  #   container_name: text-to-video-web
+  #   ports:
+  #     - "8000:8000"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./output:/app/output
+  #   command: ["python", "-m", "http.server", "8000"]
+
+# Create named volumes for persistence
+volumes:
+  output_data:
+  logs_data:
