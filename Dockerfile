@@ -23,11 +23,8 @@ RUN find /etc -name "policy.xml" -path "*/ImageMagick*" 2>/dev/null | \
 # Copy requirements first for better layer caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (including Streamlit)
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Streamlit
-RUN pip install streamlit
 
 # Copy application files
 COPY . .

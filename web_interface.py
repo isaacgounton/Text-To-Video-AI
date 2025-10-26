@@ -5,6 +5,10 @@ import tempfile
 import shutil
 from datetime import datetime
 import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import utility functions
 from utility.script.script_generator import generate_script
@@ -87,12 +91,15 @@ def generate_video_pipeline(topic, progress_bar):
     SAMPLE_FILE_NAME = "audio_tts.wav"
     VIDEO_SERVER = "pexel"
 
+    st.info(f"🎬 Starting video generation pipeline for: '{topic}'")
+
     try:
         # Step 1: Generate script (15%)
         update_progress_bar(progress_bar, 0.15, "📝 Generating script from topic...")
+        st.info("🤖 Calling AI to generate script...")
         script = generate_script(topic)
         st.session_state.generated_script = script
-        st.success("✅ Script generated successfully!")
+        st.success(f"✅ Script generated successfully! ({len(script)} characters)")
 
         # Step 2: Generate audio (30%)
         update_progress_bar(progress_bar, 0.30, "🎙️ Converting text to speech...")
@@ -218,6 +225,8 @@ def main():
                 st.error("Please enter a topic!")
                 return
 
+            st.info(f"🚀 Starting video generation for topic: '{topic.strip()}'")
+
             # Initialize session state
             st.session_state.generating = True
             st.session_state.current_status = "Starting video generation..."
@@ -238,17 +247,31 @@ def main():
             st.info("🎬 Enter a topic to get started!")
 
     # Generation section
-    if 'generating' in st.session_state and st.session_state.generating and topic:
-        progress_bar = create_progress_bar()
-
-        # Generate video
-        video_path = generate_video_pipeline(topic.strip(), progress_bar)
-
-        if video_path:
-            st.session_state.video_path = video_path
+    if 'generating' in st.session_state and st.session_state.generating:
+        if not topic or not topic.strip():
+            st.error("❌ No topic provided!")
             st.session_state.generating = False
             st.rerun()
-        else:
+            return
+
+        st.info(f"🎥 Processing topic: '{topic.strip()}'")
+        progress_bar = create_progress_bar()
+
+        try:
+            # Generate video
+            video_path = generate_video_pipeline(topic.strip(), progress_bar)
+
+            if video_path:
+                st.session_state.video_path = video_path
+                st.success("✅ Video generation completed!")
+            else:
+                st.error("❌ Video generation failed!")
+
+            st.session_state.generating = False
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Error during video generation: {str(e)}")
             st.session_state.generating = False
             st.rerun()
 
