@@ -1,4 +1,26 @@
+# Environment variables
+.env
+
+# Logs and temporary files
 .logs/
 venv/
 __pycache__/
 .DS_Store
+
+# Generated media files
+rendered_video.mp4
+*.wav
+*.mp4
+*.avi
+*.mov
+*.wmv
+.flv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
