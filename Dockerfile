@@ -13,11 +13,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure ImageMagick policy for better compatibility
+# Remove restrictions that block text rendering and image operations
 RUN find /etc -name "policy.xml" -path "*/ImageMagick*" 2>/dev/null | \
     while read policy_file; do \
-        if grep -q 'rights="none"' "$policy_file" 2>/dev/null; then \
-            sed -i 's/domain="coder" rights="none"/domain="coder" rights="read|write"/g' "$policy_file" 2>/dev/null || true; \
-        fi; \
+    if [ -f "$policy_file" ]; then \
+    sed -i 's/domain="coder" rights="none"/domain="coder" rights="read|write"/g' "$policy_file" || true; \
+    sed -i 's/domain="filter" rights="none"/domain="filter" rights="read|write"/g' "$policy_file" || true; \
+    sed -i 's/domain="delegate" rights="none"/domain="delegate" rights="read|write"/g' "$policy_file" || true; \
+    fi; \
     done || true
 
 # Copy requirements first for better layer caching

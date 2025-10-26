@@ -18,9 +18,18 @@ else:
 
 log_directory = ".logs/gpt_logs"
 
+# SEGMENT DURATION CONFIGURATION
+# These settings control how many segments are created for the video
+# Longer segments = fewer API calls to Pexels = less rate limiting
+# Adjust these values based on your needs:
+# - "2-4 seconds": More segments, more dynamic but more API calls
+# - "3-5 seconds": Balanced (current setting)
+# - "5-7 seconds": Fewer segments, fewer API calls, less dynamic
+# See VIDEO_GENERATION_EXPLAINED.md for more details
+
 prompt = """# Instructions
 
-Given the following video script and timed captions, extract three visually concrete and specific keywords for each time segment that can be used to search for background videos. The keywords should be short and capture the main essence of the sentence. They can be synonyms or related terms. If a caption is vague or general, consider the next timed caption for more context. If a keyword is a single word, try to return a two-word keyword that is visually concrete. If a time frame contains two or more important pieces of information, divide it into shorter time frames with one keyword each. Ensure that the time periods are strictly consecutive and cover the entire length of the video. Each keyword should cover between 2-4 seconds. The output should be in JSON format, like this: [[[t1, t2], ["keyword1", "keyword2", "keyword3"]], [[t2, t3], ["keyword4", "keyword5", "keyword6"]], ...]. Please handle all edge cases, such as overlapping time segments, vague or general captions, and single-word keywords.
+Given the following video script and timed captions, extract three visually concrete and specific keywords for each time segment that can be used to search for background videos. The keywords should be short and capture the main essence of the sentence. They can be synonyms or related terms. If a caption is vague or general, consider the next timed caption for more context. If a keyword is a single word, try to return a two-word keyword that is visually concrete. If a time frame contains two or more important pieces of information, divide it into shorter time frames with one keyword each. Ensure that the time periods are strictly consecutive and cover the entire length of the video. Each keyword should cover between 3-5 seconds (longer segments are better). Minimize the number of segments - aim for fewer, longer segments rather than many short ones. The output should be in JSON format, like this: [[[t1, t2], ["keyword1", "keyword2", "keyword3"]], [[t2, t3], ["keyword4", "keyword5", "keyword6"]], ...]. Please handle all edge cases, such as overlapping time segments, vague or general captions, and single-word keywords.
 
 For example, if the caption is 'The cheetah is the fastest land animal, capable of running at speeds up to 75 mph', the keywords should include 'cheetah running', 'fastest animal', and '75 mph'. Similarly, for 'The Great Wall of China is one of the most iconic landmarks in the world', the keywords should be 'Great Wall of China', 'iconic landmark', and 'China landmark'.
 
@@ -40,13 +49,31 @@ Note: Your response should be the response only and no extra text or data.
   """
 
 def fix_json(json_str):
+    """Clean and fix JSON string to handle various formatting issues"""
+    # Remove any markdown code blocks
+    json_str = json_str.replace("```json", "").replace("```", "")
+    
     # Replace typographical apostrophes with straight quotes
-    json_str = json_str.replace("’", "'")
+    json_str = json_str.replace("'", "'")
+    
     # Replace any incorrect quotes (e.g., mixed single and double quotes)
-    json_str = json_str.replace("“", "\"").replace("”", "\"").replace("‘", "\"").replace("’", "\"")
+    json_str = json_str.replace(""", "\"").replace(""", "\"").replace("'", "\"").replace("'", "\"")
+    
     # Add escaping for quotes within the strings
     json_str = json_str.replace('"you didn"t"', '"you didn\'t"')
-    return json_str
+    
+    # Fix numpy types: np.float64(X) -> X
+    json_str = re.sub(r'np\.float64\(([\d.]+)\)', r'\1', json_str)
+    json_str = re.sub(r'np\.int64\((\d+)\)', r'\1', json_str)
+    json_str = re.sub(r'np\.float32\(([\d.]+)\)', r'\1', json_str)
+    
+    # Remove any remaining numpy type notations
+    json_str = json_str.replace("np.float64(", "").replace("np.int64(", "").replace("np.float32(", "")
+    
+    # Remove trailing commas that might appear before ] or }
+    json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+    
+    return json_str.strip()
 
 def getVideoSearchQueriesTimed(script,captions_timed):
     end = captions_timed[-1][0][1]
@@ -57,14 +84,30 @@ def getVideoSearchQueriesTimed(script,captions_timed):
             content = call_OpenAI(script,captions_timed).replace("'",'"')
             try:
                 out = json.loads(content)
+            except json.JSONDecodeError as e:
+                print("JSON decode error:", str(e))
+                print("Raw content: \n", content, "\n\n")
+                
+                # Try to fix the JSON
+                cleaned_content = fix_json(content)
+                print("Cleaned content: \n", cleaned_content, "\n\n")
+                
+                try:
+                    out = json.loads(cleaned_content)
+                except json.JSONDecodeError as e2:
+                    print("Failed to parse even after cleaning:", str(e2))
+                    print("This might be a Groq/OpenAI API issue. Retrying...")
+                    # Return None to trigger retry
+                    return None
             except Exception as e:
-                print("content: \n", content, "\n\n")
-                print(e)
-                content = fix_json(content.replace("```json", "").replace("```", ""))
-                out = json.loads(content)
+                print("Unexpected error:", str(e))
+                return None
+                
         return out
     except Exception as e:
         print("error in response",e)
+        import traceback
+        traceback.print_exc()
    
     return None
 
@@ -84,7 +127,7 @@ Timed Captions:{}
     )
     
     text = response.choices[0].message.content.strip()
-    text = re.sub('\s+', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
     print("Text", text)
     log_response(LOG_TYPE_GPT,script,text)
     return text
