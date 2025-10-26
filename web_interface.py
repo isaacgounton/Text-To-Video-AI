@@ -231,7 +231,9 @@ def main():
             st.session_state.generating = True
             st.session_state.current_status = "Starting video generation..."
             st.session_state.video_path = None
-            st.rerun()
+
+            # Prevent automatic page refresh during generation
+            st.session_state.generation_started = True
 
     with col2:
         st.header("📊 Status")
@@ -255,6 +257,12 @@ def main():
             return
 
         st.info(f"🎥 Processing topic: '{topic.strip()}'")
+
+        # Create expandable section for detailed error display
+        with st.expander("🐛 Debug Information", expanded=False):
+            st.write("**Topic:**", topic.strip() if topic else "None")
+            st.write("**Session State:**", {k: v for k, v in st.session_state.items()})
+
         progress_bar = create_progress_bar()
 
         try:
@@ -264,6 +272,7 @@ def main():
             if video_path:
                 st.session_state.video_path = video_path
                 st.success("✅ Video generation completed!")
+                st.info(f"📁 Video saved to: {video_path}")
             else:
                 st.error("❌ Video generation failed!")
 
@@ -272,6 +281,15 @@ def main():
 
         except Exception as e:
             st.error(f"❌ Error during video generation: {str(e)}")
+            st.error("🔍 Error Details:")
+            st.code(f"Error Type: {type(e).__name__}")
+            st.code(f"Error Message: {str(e)}")
+
+            # Show stack trace in expander
+            with st.expander("📋 Full Error Trace", expanded=True):
+                import traceback
+                st.code(traceback.format_exc(), language="python")
+
             st.session_state.generating = False
             st.rerun()
 

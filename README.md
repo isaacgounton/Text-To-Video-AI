@@ -2,15 +2,15 @@
 
 Generate video from text using AI
 
-If you wish to add Text to Video into your application, here is an api to create video from text :- https://docs.vadoo.tv/docs/guide/create-an-ai-video
+If you wish to add Text to Video into your application, here is an api to create video from text :- <https://docs.vadoo.tv/docs/guide/create-an-ai-video>
 
-### Youtube Tutorial -> https://www.youtube.com/watch?v=AXo6VfRUgic
+### Youtube Tutorial -> <https://www.youtube.com/watch?v=AXo6VfRUgic>
 
-### Medium tutorial -> https://medium.com/@anilmatcha/text-to-video-ai-how-to-create-videos-for-free-a-complete-guide-a25c91de50b8
+### Medium tutorial -> <https://medium.com/@anilmatcha/text-to-video-ai-how-to-create-videos-for-free-a-complete-guide-a25c91de50b8>
 
 ### Demo Video
 
-https://github.com/user-attachments/assets/1e440ace-8560-4e12-850e-c532740711e7
+<https://github.com/user-attachments/assets/1e440ace-8560-4e12-850e-c532740711e7>
 
 ### 🌟 Show Support
 
@@ -66,3 +66,6 @@ As an open-source project we are extremely open to contributions. To get started
 [Hailuo AI alternative](https://www.vadoo.tv/hailuo-ai)
 
 [Minimax AI alternative](https://www.vadoo.tv/minimax-ai)
+
+Start
+streamlit run web_interface.py --server.address=0.0.0.0 --server.port=8501

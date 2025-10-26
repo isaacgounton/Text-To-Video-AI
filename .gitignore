@@ -1,5 +1,6 @@
 # Environment variables
 .env
+.venv/
 
 # Logs and temporary files
 .logs/

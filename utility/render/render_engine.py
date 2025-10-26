@@ -4,8 +4,12 @@ import tempfile
 import zipfile
 import platform
 import subprocess
-from moviepy.editor import (AudioFileClip, CompositeVideoClip, CompositeAudioClip, ImageClip,
-                            TextClip, VideoFileClip)
+try:
+    from moviepy.editor import (AudioFileClip, CompositeVideoClip, CompositeAudioClip, ImageClip,
+                                TextClip, VideoFileClip)
+except ImportError:
+    from moviepy import (AudioFileClip, CompositeVideoClip, CompositeAudioClip, ImageClip,
+                      TextClip, VideoFileClip)
 from moviepy.audio.fx.audio_loop import audio_loop
 from moviepy.audio.fx.audio_normalize import audio_normalize
 import requests
@@ -32,11 +36,14 @@ def get_program_path(program_name):
 def get_output_media(audio_file_path, timed_captions, background_video_data, video_server):
     OUTPUT_FILE_NAME = "rendered_video.mp4"
     magick_path = get_program_path("magick")
-    print(magick_path)
+    print(f"ImageMagick path detected: {magick_path}")
     if magick_path:
         os.environ['IMAGEMAGICK_BINARY'] = magick_path
+        st.info(f"✅ ImageMagick found at: {magick_path}")
     else:
         os.environ['IMAGEMAGICK_BINARY'] = '/usr/bin/convert'
+        st.warning(f"⚠️ ImageMagick not found, using fallback: /usr/bin/convert")
+        st.info("💡 Consider installing ImageMagick: sudo apt install imagemagick")
     
     visual_clips = []
     for (t1, t2), video_url in background_video_data:

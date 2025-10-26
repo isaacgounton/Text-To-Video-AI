@@ -7,7 +7,7 @@ from utility.utils import log_response,LOG_TYPE_GPT
 
 if len(os.environ.get("GROQ_API_KEY")) > 30:
     from groq import Groq
-    model = "llama3-70b-8192"
+    model = "moonshotai/kimi-k2-instruct-0905"
     client = Groq(
         api_key=os.environ.get("GROQ_API_KEY"),
         )
