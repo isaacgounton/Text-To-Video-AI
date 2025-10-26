@@ -26,6 +26,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Initialize session state variables
+if 'st.session_state.generation_started' not in st.session_state:
+    st.session_state.generation_started = False
+if 'generating' not in st.session_state:
+    st.session_state.generating = False
+if 'video_path' not in st.session_state:
+    st.session_state.video_path = None
+if 'current_status' not in st.session_state:
+    st.session_state.current_status = "Ready to generate video!"
+if 'generated_script' not in st.session_state:
+    st.session_state.generated_script = None
+if 'timed_captions' not in st.session_state:
+    st.session_state.timed_captions = None
+if 'search_terms' not in st.session_state:
+    st.session_state.search_terms = None
+
 # Custom CSS for better styling
 st.markdown("""
 <style>
